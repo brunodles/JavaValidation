@@ -8,10 +8,12 @@ import static com.github.brunodles.javavalidation.matcher.Common._if;
 /**
  * Created by bruno on 04/06/16.
  */
-public class BooleanMatcher implements ObjectMatcher<Boolean, BooleanMatcher> {
+public class BooleanMatcher implements ObjectMatcher<Boolean, BooleanMatcher>,
+        NotMatcher<BooleanMatcher> {
 
     Boolean value;
     IntConsumer adder;
+    private boolean not;
 
     public BooleanMatcher(Boolean value, IntConsumer adder) {
         this.value = value;
@@ -24,7 +26,7 @@ public class BooleanMatcher implements ObjectMatcher<Boolean, BooleanMatcher> {
      * @return the current object, to be used as a builder
      */
     public BooleanMatcher isTrue() {
-        _if(() -> value, adder, Errors.TRUE);
+        _if(() -> value, adder, Errors.TRUE, not, this::setNotFalse);
         return this;
     }
 
@@ -34,7 +36,7 @@ public class BooleanMatcher implements ObjectMatcher<Boolean, BooleanMatcher> {
      * @return the current object, to be used as a builder
      */
     public BooleanMatcher isFalse() {
-        _if(() -> !value, adder, Errors.FALSE);
+        _if(() -> !value, adder, Errors.FALSE, not, this::setNotFalse);
         return this;
     }
 
@@ -45,7 +47,7 @@ public class BooleanMatcher implements ObjectMatcher<Boolean, BooleanMatcher> {
      */
     @Override
     public BooleanMatcher isNull() {
-        _if(() -> value == null, adder, Errors.NULL);
+        _if(() -> value == null, adder, Errors.NULL, not, this::setNotFalse);
         return this;
     }
 
@@ -57,7 +59,17 @@ public class BooleanMatcher implements ObjectMatcher<Boolean, BooleanMatcher> {
      */
     @Override
     public BooleanMatcher isEqualsTo(Boolean expected) {
-        _if(() -> value.equals(expected), adder, Errors.EQUAL);
+        _if(() -> value.equals(expected), adder, Errors.EQUAL, not, this::setNotFalse);
+        return this;
+    }
+
+    private void setNotFalse() {
+        not = false;
+    }
+
+    @Override
+    public BooleanMatcher not() {
+        not = true;
         return this;
     }
 }

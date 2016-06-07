@@ -17,6 +17,8 @@ public class MainTest {
 
     private ValidationResult validation;
 
+    private long aLongFiled_param;
+
     {
         describe("Given a Validator", () -> {
             before(() -> {
@@ -113,6 +115,33 @@ public class MainTest {
 
             });
 
+            describe("when validate a long field", () -> {
+                beforeEach(() -> {
+                    SampleClass sample = new SampleClass();
+                    sample.aLongField = aLongFiled_param;
+                    validation = validator.validate(sample);
+                });
+                describe("when the field is lower than expected", () -> {
+                    before(() -> aLongFiled_param = 0L);
+                    it("should add error to the field", () -> {
+                        expect(validation.contains("aLongField", BETWEEN)).toBeTrue();
+                    });
+                });
+                describe("when the field is greater than expected", () -> {
+                    before(() -> aLongFiled_param = 6L);
+                    it("should add error to the field", () -> {
+                        expect(validation.contains("aLongField", BETWEEN)).toBeTrue();
+                    });
+                });
+                describe("when the field is between th expected", () -> {
+                    before(() -> aLongFiled_param = 3L);
+                    it("should add error to the field", () -> {
+                        expect(validation.contains("aLongField", BETWEEN)).toBeFalse();
+                    });
+                });
+
+            });
+
         });
 
     }
@@ -121,13 +150,16 @@ public class MainTest {
     private static class SampleClass {
         String name;
         int strikeCount;
+        long aLongField;
     }
 
     private static class SampleValidator extends ValidatorBase<SampleClass> {
         @Override
         void validate(SampleClass object, ValidationResultBuilder builder) {
             builder.addTo("name").when(object.name).isNull().isEmpty().length(i -> i.isLower(8));
-            builder.addTo("strikeCount").when(object.strikeCount).isNull().isGreater(6);
+            builder.addTo("strikeCount").when(object.strikeCount).isGreater(6);
+            builder.addTo("aLongField").when(object.aLongField).not().
+                    isBetween(1L, 5L);
         }
     }
 }

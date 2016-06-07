@@ -10,9 +10,10 @@ import static com.github.brunodles.javavalidation.matcher.Common._if;
  * Created by bruno on 03/06/16.
  */
 public class StringMatcher implements ObjectMatcher<String, StringMatcher>,
-        EqualsMatcher<String, StringMatcher> {
+        EqualsMatcher<String, StringMatcher>, NotMatcher<StringMatcher> {
     private String value;
     private IntConsumer adder;
+    private boolean not;
 
     StringMatcher(String value, IntConsumer adder) {
         this.value = value;
@@ -25,8 +26,12 @@ public class StringMatcher implements ObjectMatcher<String, StringMatcher>,
      * @return the current object, to be used as a builder
      */
     public StringMatcher isEmpty() {
-        _if(() -> value.isEmpty(), adder, Errors.EMPTY);
+        _if(() -> value.isEmpty(), adder, Errors.EMPTY, not, this::setNotFalse);
         return this;
+    }
+
+    private void setNotFalse() {
+        not = false;
     }
 
     /**
@@ -36,7 +41,7 @@ public class StringMatcher implements ObjectMatcher<String, StringMatcher>,
      */
     @Override
     public StringMatcher isNull() {
-        _if(() -> value == null, adder, Errors.NULL);
+        _if(() -> value == null, adder, Errors.NULL, not, this::setNotFalse);
         return this;
     }
 
@@ -60,7 +65,13 @@ public class StringMatcher implements ObjectMatcher<String, StringMatcher>,
      */
     @Override
     public StringMatcher isEqualsTo(String expected) {
-        _if(() -> value.equals(expected), adder, Errors.EQUAL);
+        _if(() -> value.equals(expected), adder, Errors.EQUAL, not, this::setNotFalse);
+        return this;
+    }
+
+    @Override
+    public StringMatcher not() {
+        not = true;
         return this;
     }
 }
