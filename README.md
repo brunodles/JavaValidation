@@ -8,8 +8,10 @@ A lib to make validations on java objects
 ## How add it
 Add the repository to your build.gradle with:
 ```gradle
-repositories {
-    maven { url "https://jitpack.io" }
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
 }
 ```
 and on your project dependencies:

@@ -13,19 +13,17 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 @RunWith(OleasterRunner.class)
 public class MainTest {
 
-    private SampleValidator validator;
-
-    private ValidationResult validation;
+    private Validator validator;
 
     {
         describe("Given a Validator", () -> {
             before(() -> {
-                validator = new SampleValidator();
+                validator = new SampleValidator(null);
             });
 
             describe("when pass a null value", () -> {
                 it("should throw NullPointerException", () -> {
-                    expect(() -> validator.validate(null)).toThrow(NullPointerException.class);
+                    expect(() -> validator.validate()).toThrow(NullPointerException.class);
                 });
             });
 
@@ -33,60 +31,61 @@ public class MainTest {
 
                 describe("when pass a object with null values", () -> {
                     before(() -> {
-                        validation = validator.validate(new SampleClass());
+                        validator = new SampleValidator(new SampleClass())
+                                .validate();
                     });
                     it("should be invalid", () -> {
-                        expect(validation.isValid()).toBeFalse();
+                        expect(validator.isValid()).toBeFalse();
                     });
                     it("should add NULL name errors", () -> {
-                        expect(validation.contains("name", NULL)).toBeTrue();
+                        expect(validator.contains("name", NULL)).toBeTrue();
                     });
                     it("should not add EMPTY on name errors", () -> {
-                        expect(validation.contains("name", EMPTY)).toBeFalse();
+                        expect(validator.contains("name", EMPTY)).toBeFalse();
                     });
                     it("should not add LOWER on name errors", () -> {
-                        expect(validation.contains("name", LOWER)).toBeFalse();
+                        expect(validator.contains("name", LOWER)).toBeFalse();
                     });
                     it("should contain the key", () -> {
-                        expect(validation.contains("name")).toBeTrue();
+                        expect(validator.contains("name")).toBeTrue();
                     });
                     it("should add the \"name\" as a key in \"keys\" method", () -> {
-                        expect(validation.keys().contains("name")).toBeTrue();
+                        expect(validator.keys().contains("name")).toBeTrue();
                     });
                 });
                 describe("when pass a object with empty values", () -> {
                     before(() -> {
                         SampleClass sample = new SampleClass();
                         sample.name = "";
-                        validation = validator.validate(sample);
+                        validator = new SampleValidator(sample).validate();
                     });
                     it("should be invalid", () -> {
-                        expect(validation.isValid()).toBeFalse();
+                        expect(validator.isValid()).toBeFalse();
                     });
                     it("should not add NULL name errors", () -> {
-                        expect(validation.contains("name", NULL)).toBeFalse();
+                        expect(validator.contains("name", NULL)).toBeFalse();
                     });
                     it("should add EMPTY on name errors", () -> {
-                        expect(validation.contains("name", EMPTY)).toBeTrue();
+                        expect(validator.contains("name", EMPTY)).toBeTrue();
                     });
                     it("should add LOWER on name errors", () -> {
-                        expect(validation.contains("name", LOWER)).toBeTrue();
+                        expect(validator.contains("name", LOWER)).toBeTrue();
                     });
                 });
                 describe("when pass a object with feel characters", () -> {
                     before(() -> {
                         SampleClass sample = new SampleClass();
                         sample.name = "123";
-                        validation = validator.validate(sample);
+                        validator = new SampleValidator(sample).validate();
                     });
                     it("should not add NULL name errors", () -> {
-                        expect(validation.contains("name", NULL)).toBeFalse();
+                        expect(validator.contains("name", NULL)).toBeFalse();
                     });
                     it("should add EMPTY on name errors", () -> {
-                        expect(validation.contains("name", EMPTY)).toBeFalse();
+                        expect(validator.contains("name", EMPTY)).toBeFalse();
                     });
                     it("should add LOWER on name errors", () -> {
-                        expect(validation.contains("name", LOWER)).toBeTrue();
+                        expect(validator.contains("name", LOWER)).toBeTrue();
                     });
                 });
             });
@@ -94,20 +93,20 @@ public class MainTest {
             describe("when validate a int field", () -> {
                 before(() -> {
                     SampleClass sample = new SampleClass();
-                    validation = validator.validate(sample);
+                    validator = new SampleValidator(sample).validate();
                 });
                 it("should not add NULL on strikeCount errors", () -> {
-                    expect(validation.contains("strikeCount", NULL)).toBeFalse();
+                    expect(validator.contains("strikeCount", NULL)).toBeFalse();
                 });
 
                 describe("when contains the wrong value", () -> {
                     before(() -> {
                         SampleClass sample = new SampleClass();
                         sample.strikeCount = 7;
-                        validation = validator.validate(sample);
+                        validator = new SampleValidator(sample).validate();
                     });
                     it("should add GREATER on strikeCount errors", () -> {
-                        expect(validation.contains("strikeCount", GREATER)).toBeTrue();
+                        expect(validator.contains("strikeCount", GREATER)).toBeTrue();
                     });
                 });
 
@@ -117,17 +116,20 @@ public class MainTest {
 
     }
 
-
     private static class SampleClass {
         String name;
         int strikeCount;
     }
 
     private static class SampleValidator extends ValidatorBase<SampleClass> {
+        public SampleValidator(SampleClass objectToValidate) {
+            super(objectToValidate);
+        }
+
         @Override
-        void validate(SampleClass object, ValidationResultBuilder builder) {
-            builder.addTo("name").when(object.name).isNull().isEmpty().length(i -> i.isLower(8));
-            builder.addTo("strikeCount").when(object.strikeCount).isNull().isGreater(6);
+        protected void validate(SampleClass object) {
+            addTo("name").when(object.name).isNull().isEmpty().length(i -> i.isLower(8));
+            addTo("strikeCount").when(object.strikeCount).isNull().isGreater(6);
         }
     }
 }
